@@ -71,8 +71,6 @@ function resetFileSelection() {
     filePreview.classList.add('hidden');
     dropZone.classList.remove('hidden');
 }
-// URL proporcionada de ngrok conectada a n8n (Modifica esta línea cuando cambie tu túnel)
-const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/3dbd521c-548a-42c6-ae8f-68ca1118243c';
 
 // Elementos del DOM
 const absenceForm = document.getElementById('absence-form');
