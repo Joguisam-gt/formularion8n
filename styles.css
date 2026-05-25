@@ -1114,3 +1114,46 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* =========================================================================
+   ESTILOS ADICIONALES PARA CABECERA DE TITULO DE AETHER IA
+   ========================================================================= */
+.portal-global-title {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    padding: 0 1rem;
+}
+
+.system-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.08);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+}
+
+.portal-global-title h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--text-primary), var(--text-secondary));
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+}
+
+.title-divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+    margin: 0.8rem auto 0 auto;
+    box-shadow: 0 0 8px var(--accent-cyan);
+    border-radius: 2px;
+}
