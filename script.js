@@ -2,7 +2,7 @@
 // CONFIGURACIÓN DE ENDPOINTS GLOBALES
 // =========================================================================
 // Nueva URL fija para el procesamiento automatizado de justificantes:
-const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/recibir-justificantes';
+const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook/recibir-justificantes';
 
 // Elementos de Interfaz del DOM
 const absenceForm = document.getElementById('absence-form');
