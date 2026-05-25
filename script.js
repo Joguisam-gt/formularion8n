@@ -1,10 +1,7 @@
-// =========================================================================
-// CONFIGURACIÓN DE ENDPOINTS GLOBALES
-// =========================================================================
-// Nueva URL fija para el procesamiento automatizado de justificantes:
+// URL proporcionada de ngrok conectada a n8n
 const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/recibir-justificantes';
 
-// Elementos de Interfaz del DOM
+// Elementos del DOM
 const absenceForm = document.getElementById('absence-form');
 const fileInput = document.getElementById('file-input');
 const dropZone = document.getElementById('drop-zone');
@@ -14,20 +11,18 @@ const removeFileBtn = document.getElementById('remove-file-btn');
 const submitBtn = document.getElementById('submit-btn');
 const submitBtnText = document.getElementById('submit-btn-text');
 
-// Variables de Control de Estado para Carga Extensible
+// Variables de Control para el Archivo
 let attachedFileBase64 = null;
 let attachedFileName = "Ninguno";
 
-// =========================================================================
-// LÓGICA DE MANEJO DE ARCHIVOS (DROPZONE CONVERTER)
-// =========================================================================
+// --- LOGICA DE MANEJO DE ARCHIVOS (DROPZONE) ---
 
 dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', handleFileSelection);
 
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.style.borderColor = 'var(--accent-cyan, #06b6d4)';
+    dropZone.style.borderColor = 'var(--accent-color, #00ffcc)';
 });
 
 dropZone.addEventListener('dragleave', () => {
@@ -48,7 +43,7 @@ function handleFileSelection() {
     if (!file) return;
 
     if (file.size > 8 * 1024 * 1024) {
-        showModal("ARCHIVO EXCEDIDO", "El documento seleccionado supera el límite de transferencia de 8 MB.");
+        alert("El archivo excede el límite de transferencia de 8 MB.");
         resetFileSelection();
         return;
     }
@@ -62,9 +57,76 @@ function handleFileSelection() {
         dropZone.classList.add('hidden');
         filePreview.classList.remove('hidden');
     };
-    reader.onerror = () => {
-        showModal("ERROR DE LECTURA", "No se pudo procesar el archivo seleccionado.");
+    reader.readAsDataURL(file);
+}
+
+removeFileBtn.addEventListener('click', resetFileSelection);
+
+function resetFileSelection() {
+    fileInput.value = "";
+    attachedFileBase64 = null;
+    attachedFileName = "Ninguno";
+    filePreview.classList.add('hidden');
+    dropZone.classList.remove('hidden');
+}
+// URL proporcionada de ngrok conectada a n8n (Modifica esta línea cuando cambie tu túnel)
+const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/3dbd521c-548a-42c6-ae8f-68ca1118243c';
+
+// Elementos del DOM
+const absenceForm = document.getElementById('absence-form');
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+const filePreview = document.getElementById('file-preview');
+const fileNameDisplay = document.getElementById('file-name-display');
+const removeFileBtn = document.getElementById('remove-file-btn');
+const submitBtn = document.getElementById('submit-btn');
+const submitBtnText = document.getElementById('submit-btn-text');
+
+// Variables de Control para el Archivo
+let attachedFileBase64 = null;
+let attachedFileName = "Ninguno";
+
+// --- LÓGICA DE MANEJO DE ARCHIVOS (DROPZONE) ---
+
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelection);
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'var(--accent-color, #00ffcc)';
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = 'rgba(255,255,255,0.1)';
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(255,255,255,0.1)';
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelection();
+    }
+});
+
+function handleFileSelection() {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+        alert("El archivo excede el límite de transferencia de 8 MB.");
         resetFileSelection();
+        return;
+    }
+
+    attachedFileName = file.name;
+    fileNameDisplay.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        attachedFileBase64 = reader.result.split(',')[1];
+        dropZone.classList.add('hidden');
+        filePreview.classList.remove('hidden');
     };
     reader.readAsDataURL(file);
 }
@@ -79,16 +141,16 @@ function resetFileSelection() {
     dropZone.classList.remove('hidden');
 }
 
-// =========================================================================
-// TRANSMISIÓN ASÍNCRONA HACIA EL NÚCLEO N8N
-// =========================================================================
+// --- ENVÍO DE DATOS A N8N WEBHOOK ---
 
 absenceForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    // Feedback visual en el botón para evitar doble envío síncrono
     submitBtn.disabled = true;
     submitBtnText.textContent = "Despachando...";
 
+    // CORRECCIÓN: Estructuración limpia sin el campo de asignación de curso
     const payload = {
         // 1. Identificación Estudiantil
         nombre_estudiante: document.getElementById('studentName').value,
@@ -101,13 +163,14 @@ absenceForm.addEventListener('submit', async (event) => {
         fecha_fin: document.getElementById('endDate').value,
         descripcion: document.getElementById('description').value,
 
-        // 3. Evidencia Documental Sanitizada
+        // 3. Evidencia Documental (Base64)
         evidencia_nombre: attachedFileName,
         evidencia_base64: attachedFileBase64, 
 
-        // 4. Parámetros Automatizados de Control Interno (Revisión Manual)
+        // 4. Parámetros de Auditoría Interna
         estado_tramite: "Pendiente", 
-        fecha_registro: new Date().toISOString()
+        fecha_registro: new Date().toISOString(),   
+        id_tramite: idTramite,
     };
 
     try {
@@ -128,9 +191,10 @@ absenceForm.addEventListener('submit', async (event) => {
             showModal("FALLO DE ENLACE", `El bus local respondió con un estado de error: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
-        console.error("Error crítico de red en fetch:", error);
+        console.error("Error de conexión con n8n:", error);
         showModal("ERROR DE RED", "No se pudo establecer conexión segura con el nodo Webhook de n8n. Verifique que el túnel ngrok y n8n estén activos y escuchando.");
     } finally {
+        // Restaurar botón a su estado original
         submitBtn.disabled = false;
         submitBtnText.textContent = "Despachar Formulario";
     }
