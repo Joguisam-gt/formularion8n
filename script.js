@@ -14,6 +14,11 @@ const submitBtnText = document.getElementById('submit-btn-text');
 // Variables de Control para el Archivo
 let attachedFileBase64 = null;
 let attachedFileName = "Ninguno";
+// --- CAPTURA DEL QUERY STRING (ID DE TRÁMITE) ---
+// Leemos la URL actual del navegador
+const urlParams = new URLSearchParams(window.location.search);
+// Extraemos el valor del parámetro 'id_tramite'
+const idTramite = urlParams.get('id_tramite') || "Sin-ID";
 
 // --- LOGICA DE MANEJO DE ARCHIVOS (DROPZONE) ---
 
@@ -69,6 +74,18 @@ function resetFileSelection() {
     filePreview.classList.add('hidden');
     dropZone.classList.remove('hidden');
 }
+// URL proporcionada de ngrok conectada a n8n (Modifica esta línea cuando cambie tu túnel)
+const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/3dbd521c-548a-42c6-ae8f-68ca1118243c';
+
+// Elementos del DOM
+const absenceForm = document.getElementById('absence-form');
+const fileInput = document.getElementById('file-input');
+const dropZone = document.getElementById('drop-zone');
+const filePreview = document.getElementById('file-preview');
+const fileNameDisplay = document.getElementById('file-name-display');
+const removeFileBtn = document.getElementById('remove-file-btn');
+const submitBtn = document.getElementById('submit-btn');
+const submitBtnText = document.getElementById('submit-btn-text');
 
 // Variables de Control para el Archivo
 let attachedFileBase64 = null;
@@ -139,6 +156,7 @@ absenceForm.addEventListener('submit', async (event) => {
     submitBtnText.textContent = "Despachando...";
 
     // CORRECCIÓN: Estructuración limpia sin el campo de asignación de curso
+    // Estructuración limpia de los datos recopilados
     const payload = {
         // 1. Identificación Estudiantil
         nombre_estudiante: document.getElementById('studentName').value,
@@ -157,8 +175,8 @@ absenceForm.addEventListener('submit', async (event) => {
 
         // 4. Parámetros de Auditoría Interna
         estado_tramite: "Pendiente", 
-        fecha_registro: new Date().toISOString(),   
-        id_tramite: idTramite,
+        fecha_registro: new Date().toISOString(),
+        id_tramite: idTramite // <--- Volvemos a agregar esta línea de forma segura
     };
 
     try {
