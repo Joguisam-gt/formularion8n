@@ -1,8 +1,6 @@
 // URL proporcionada de ngrok conectada a n8n
 const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/recibir-justificantes';
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
-const idTramite = urlParams.get('idtramite');
+
 // Elementos del DOM
 const absenceForm = document.getElementById('absence-form');
 const fileInput = document.getElementById('file-input');
@@ -71,16 +69,6 @@ function resetFileSelection() {
     filePreview.classList.add('hidden');
     dropZone.classList.remove('hidden');
 }
-
-// Elementos del DOM
-const absenceForm = document.getElementById('absence-form');
-const fileInput = document.getElementById('file-input');
-const dropZone = document.getElementById('drop-zone');
-const filePreview = document.getElementById('file-preview');
-const fileNameDisplay = document.getElementById('file-name-display');
-const removeFileBtn = document.getElementById('remove-file-btn');
-const submitBtn = document.getElementById('submit-btn');
-const submitBtnText = document.getElementById('submit-btn-text');
 
 // Variables de Control para el Archivo
 let attachedFileBase64 = null;
