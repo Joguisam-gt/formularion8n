@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aether IA | Portal de Control</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Urbanist:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="student-portal-body">
+
+    <div class="submission-container">
+        <header class="submission-header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>AETHER <span class="ai-tag">IA</span></span>
+            </div>
+            <div class="backend-status" id="status-container">
+                <div class="status-dot online" id="status-dot"></div>
+                <span id="status-text">AETHER LOCAL BUS: ONLINE</span>
+            </div>
+        </header>
+
+        <main class="submission-card">
+            <div class="card-header">
+                <h2>Envío de Justificantes Médicos y Faltas</h2>
+                <p>Plataforma automatizada descentralizada para el procesamiento de incidencias escolares.</p>
+            </div>
+
+            <form class="tech-form" id="absence-form" autocomplete="off">
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fa-solid fa-address-card"></i>
+                        <h3>Identificación Estudiantil</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="studentName">Nombre Completo</label>
+                            <input type="text" id="studentName" required placeholder="Ej: Guillermo Rodriguez">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentId">Carné / Código</label>
+                            <input type="text" id="studentId" required placeholder="Ej: 2026-0493">
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="studentEmail">Correo Institucional</label>
+                            <input type="email" id="studentEmail" required placeholder="ejemplo@colegio.edu.gt">
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectClass">Asignación de Curso</label>
+                            <select id="subjectClass" required>
+                                <option value="" disabled selected>Seleccione la materia</option>
+                                <option value="Matemática Avanzada - Sección A">Matemática Avanzada - Sección A</option>
+                                <option value="Física Cuántica - Sección B">Física Cuántica - Sección B</option>
+                                <option value="Programación II - Sección C">Programación II - Sección C</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <h3>Especificación de la Incidencia</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="reason">Motivo Principal</label>
+                            <select id="reason" required>
+                                <option value="" disabled selected>Seleccione una opción</option>
+                                <option value="Médico">Médico / Salud</option>
+                                <option value="Familiar">Asunto Personal / Familiar</option>
+                                <option value="Legal">Trámite Legal / Oficial</option>
+                                <option value="Otros">Otros Casos de Fuerza Mayor</option>
+                            </select>
+                        </div>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem; padding: 0; margin: 0;">
+                            <div class="form-group">
+                                <label for="startDate">Fecha Inicio</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">Fecha Fin</label>
+                                <input type="date" id="endDate" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Descripción Detallada</label>
+                        <textarea id="description" rows="3" required placeholder="Explique brevemente el motivo de su inasistencia para auditoría de la IA..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <h3>Evidencia Documental</h3>
+                    </div>
+                    <p class="section-desc">Suba su constancia médica o justificante firmado. Formatos admitidos: PDF, PNG, JPG.</p>
+                    
+                    <div class="file-drop-zone" id="drop-zone">
+                        <input type="file" id="file-input" accept=".pdf, .png, .jpg, .jpeg" class="hidden">
+                        <div class="drop-zone-content">
+                            <i class="fa-solid fa-file-pdf" id="drop-icon"></i>
+                            <p>Arrastre su documento aquí o <span class="browse-link">examine archivos</span></p>
+                            <span class="file-limit">Tamaño máximo de transferencia: 8 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="file-preview-container hidden" id="file-preview">
+                        <div class="file-info">
+                            <i class="fa-solid fa-paperclip"></i>
+                            <span class="file-name-text" id="file-name-display">archivo_justificante.pdf</span>
+                            <button type="button" class="remove-btn" id="remove-file-btn">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="submit-btn">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Despachar Formulario</span>
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <footer class="submission-footer">
+            <p>AETHER SECURITY PROTOCOL — SECURE LOCAL DATA SHUTTLE</p>
+        </footer>
+    </div>
+
+    <div class="modal-overlay hidden" id="custom-modal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modal-icon-container"></div>
+            <h3 id="modal-title">ESTADO DE TRANSMISIÓN</h3>
+            <p id="modal-message">Mensaje del sistema de control operacional central.</p>
+            <button class="modal-btn" id="modal-close-btn">Aceptar</button>
+        </div>
+    </div>
+</body>
+</html>
