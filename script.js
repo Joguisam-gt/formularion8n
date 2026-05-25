@@ -19,7 +19,7 @@ let attachedFileName = "Ninguno";
 // Leemos la URL actual del navegador
 const urlParams = new URLSearchParams(window.location.search);
 // Extraemos el valor del parámetro 'id_tramite' o asignamos un plan B por seguridad
-const idTramite = urlParams.get('id_tramite') || "Sin-ID";
+const idTramite = urlParams.get('idtramite') || "Sin-ID";
 
 // --- LÓGICA DE MANEJO DE ARCHIVOS (DROPZONE) ---
 
