@@ -1,6 +1,8 @@
 // URL proporcionada de ngrok conectada a n8n
 const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/recibir-justificantes';
-
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const idTramite = urlParams.get('idtramite');
 // Elementos del DOM
 const absenceForm = document.getElementById('absence-form');
 const fileInput = document.getElementById('file-input');
