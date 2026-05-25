@@ -8,6 +8,8 @@ const dropZone = document.getElementById('drop-zone');
 const filePreview = document.getElementById('file-preview');
 const fileNameDisplay = document.getElementById('file-name-display');
 const removeFileBtn = document.getElementById('remove-file-btn');
+const submitBtn = document.getElementById('submit-btn');
+const submitBtnText = document.getElementById('submit-btn-text');
 
 // Variables de Control para el Archivo
 let attachedFileBase64 = null;
@@ -82,6 +84,10 @@ function resetFileSelection() {
 absenceForm.addEventListener('submit', async (event) => {
     event.preventDefault(); // Detener recarga nativa de la página
 
+    // Feedback visual en el botón: Prevenir re-clics mientras procesa ngrok
+    submitBtn.disabled = true;
+    submitBtnText.textContent = "Despachando...";
+
     // Estructuración limpia del JSON compatible con el Bus de n8n
     const payload = {
         // 1. Identificación Estudiantil
@@ -98,10 +104,10 @@ absenceForm.addEventListener('submit', async (event) => {
 
         // 3. Evidencia Documental (Procesada)
         evidencia_nombre: attachedFileName,
-        evidencia_base64: attachedFileBase64, // Viaja como String codificado
+        evidencia_base64: attachedFileBase64, 
 
         // 4. Parámetros Manuales de Control Interno / Auditoría
-        estado_tramite: "Pendiente", // Inicia en espera de la Revisión Manual
+        estado_tramite: "Pendiente", 
         fecha_registro: new Date().toISOString()
     };
 
@@ -109,6 +115,7 @@ absenceForm.addEventListener('submit', async (event) => {
         // Enviar la petición HTTPS POST al tunnel ngrok -> n8n
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
+            mode: 'cors', // CORRECCIÓN: Forzar modo CORS para evitar bloqueos del navegador
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -120,11 +127,15 @@ absenceForm.addEventListener('submit', async (event) => {
             absenceForm.reset();
             resetFileSelection();
         } else {
-            showModal("FALLO DE ENLACE", `El bus local respondió con error: ${response.statusText}`);
+            showModal("FALLO DE ENLACE", `El bus local respondió con un estado de error: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
         console.error("Error de conexión con n8n:", error);
-        showModal("ERROR DE RED", "No se pudo establecer conexión segura con el nodo Webhook de n8n. Verifique que el túnel ngrok esté activo.");
+        showModal("ERROR DE RED", "No se pudo establecer conexión segura con el nodo Webhook de n8n. Verifique que el túnel ngrok y n8n estén activos y escuchando.");
+    } finally {
+        // Restaurar estado original del botón
+        submitBtn.disabled = false;
+        submitBtnText.textContent = "Despachar Formulario";
     }
 });
 
