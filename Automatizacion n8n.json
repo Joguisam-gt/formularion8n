@@ -1,0 +1,1343 @@
+{
+  "name": "Proyecto final",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 1. Capturar la estructura nativa del mensaje o del callback de Telegram\nconst message = $input.item.json.message || {};\nconst callbackQuery = $input.item.json.callback_query || {};\nconst from = message.from || callbackQuery.from || {};\n\n// 2. Extraer datos del usuario\nconst telegramUserId = from.id || \"\";\nconst firstName = from.first_name || \"Usuario\";\n\n// 3. Determinar el texto entrante (si fue escrito o si fue un botón)\nlet textContent = message.text || \"\";\nlet esCallback = false;\n\nif (callbackQuery.data) {\n  textContent = callbackQuery.data; // Ej: 'reportar_falta' o 'consultar_tramite'\n  esCallback = true;\n}\n\n// 4. Detectar si contiene archivos multimedia\nconst hasVoice = !!(message.voice || message.audio);\nconst hasPhoto = !!(message.photo || message.document);\n\nreturn {\n  json: {\n    telegram_user_id: telegramUserId,\n    user_name: firstName,\n    texto_puro: textContent.trim(),\n    es_comando_start: textContent.trim() === '/start',\n    es_callback: esCallback,\n    es_audio: hasVoice,\n    es_foto: hasPhoto\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2112,
+        1088
+      ],
+      "id": "25a1c7ba-239b-4645-b5ae-340c9b9cdf4a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5efd853f-4b4c-46da-bf4c-41718f99b5a1",
+              "leftValue": "={{ $('Base de datos Alumnos').first()?.json?.telegram_user_id ? true : false }}",
+              "rightValue": ".+",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1664,
+        1088
+      ],
+      "id": "d1f8f47b-d881-402a-adb6-42eda990cf74",
+      "name": "Registrado/No Registrado"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU",
+          "mode": "list",
+          "cachedResultName": "Aether IA Ausencia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Usuarios_Registrados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "telegram_user_id",
+              "lookupValue": "={{ $('Inicio').item.json.message.from.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1888,
+        1088
+      ],
+      "id": "b410abb4-d03f-4b66-ad4f-e8590b6b069b",
+      "name": "Base de datos Alumnos",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "M2nVtuT1aBHFjtwh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2336,
+        1088
+      ],
+      "id": "df1336cd-190d-4c34-85e8-a091ff67db1b",
+      "name": "Inicio",
+      "webhookId": "429a7e6e-3c5c-4620-bc31-5e83c6e76c63",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Capturar los datos del usuario que vienen arrastrándose en el flujo\n// Usamos el operador opcional ?. para evitar errores si algún campo falta\nconst telegramUserId = $('Code in JavaScript').item?.json?.telegram_user_id || \"\";\nconst userName = $('Code in JavaScript').item?.json?.user_name || \"Usuario\";\n\n// 2. Generar un ID Alfanumérico Único (Formato: ATH-XXXXX)\nconst caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';\nlet codigoAleatorio = '';\nfor (let i = 0; i < 5; i++) {\n  codigoAleatorio += caracteres.charAt(Math.floor(Math.random() * caracteres.length));\n}\n\n// Combinamos el prefijo del proyecto (AetherIA) con el código aleatorio\nconst idInstitucional = `ATH-${codigoAleatorio}`;\n\n// 3. Retornar el payload limpio para la base de datos\nreturn {\n  json: {\n    id_registro: idInstitucional,\n    telegram_user_id: telegramUserId,\n    nombre_completo: userName,\n    rol: \"Pendiente\", // Se inicializa como pendiente para asignación manual o posterior\n    estado: \"Activo\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        1184
+      ],
+      "id": "951693ef-d54f-4960-89bb-28580acc40f6",
+      "name": "Generar ID Registro"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU",
+          "mode": "list",
+          "cachedResultName": "Aether IA Ausencia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Usuarios_Registrados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telegram_user_id": "={{ $('Code in JavaScript').item.json.telegram_user_id.toString() }}",
+            "Nombre_completo": "={{ $json.nombre_completo }}",
+            "Estado": "={{ $json.estado }}",
+            "Rol": "={{ $json.rol }}",
+            "Alumno_asociado": "={{ $json.nombre_completo }}",
+            "codigo_alumno": "={{ $json.id_registro }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "telegram_user_id",
+              "displayName": "telegram_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "codigo_alumno",
+              "displayName": "codigo_alumno",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre_completo",
+              "displayName": "Nombre_completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rol",
+              "displayName": "Rol",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Alumno_asociado",
+              "displayName": "Alumno_asociado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1088,
+        1184
+      ],
+      "id": "7c4692c9-d7e9-4d7c-bb94-d115bc79d98d",
+      "name": "Registro del nuevo Usuario",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "M2nVtuT1aBHFjtwh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Inicio').item.json.message.from.id }}",
+        "text": "={{ JSON.parse($('AetherIA usuario existente').item.json.content.parts[0].text).bienvenidadinamica }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📝 Reportar falta ",
+                    "additionalFields": {
+                      "callback_data": "reportar_falta"
+                    }
+                  },
+                  {
+                    "text": "🔍 Consultar Trámite",
+                    "additionalFields": {
+                      "callback_data": "consultar_tramite"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        992
+      ],
+      "id": "9fa15cbe-ece0-4bce-b2c2-9ae4f50d1006",
+      "name": "Saludo Usuario Existente",
+      "webhookId": "00ca4149-9108-4984-8881-9ad7d3d8a37a",
+      "notesInFlow": false,
+      "retryOnFail": false,
+      "executeOnce": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Inicio').item.json.message.chat.id }}",
+        "text": "={{ $json.content.parts[0].text }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📝 Reportar falta ",
+                    "additionalFields": {
+                      "callback_data": "reportar_falta"
+                    }
+                  },
+                  {
+                    "text": "🔍 Consultar Trámite",
+                    "additionalFields": {
+                      "callback_data": "consultar_tramite"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "=none"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        1184
+      ],
+      "id": "2c7519e9-5631-4825-b384-352770f793ba",
+      "name": "Bienvenida nuevo usuario",
+      "webhookId": "dd5ff60d-23ef-40cb-a625-b1be836e80ee",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres AetherIA, un asistente virtual empático para la gestión de ausencias escolares.  \n\nQuiero que generes un mensaje como el siguiente formato:\n\n¡Bienvenido a AetherIA! 🚀 \n\nNo encontramos un registro previo con tu ID de Telegram, por lo que hemos creado un perfil institucional automáticamente para ti. \n\n👤 Nombre: {{ $json.Nombre_completo }}\n🆔 Tu código único es: {{ $json.codigo_alumno }}\n\nTu perfil se ha inicializado como 'Activo'. Ahora puedes utilizar el menú de abajo de forma normal.\n\nREGLA IMPORTANTE: No reproduzcas en el prompt el formato que te pasé; es solo para referencia de cómo quiero el formato del mensaje"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        1184
+      ],
+      "id": "dc8ceb9c-2d32-4760-9449-5dd027e1652c",
+      "name": "AetherIA nuevo usuario",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "M919rGNNkHDWilyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres AetherIA, un asistente virtual empático para la gestión de ausencias escolares. \n\nEl usuario actual ya está registrado en el sistema con los siguientes datos oficiales de Google Sheets:\n- Nombre del usuario: {{ $json.Nombre_completo }}\n- Estado: {{ $json.Estado }}\n- Alumno asociado: {{ $json.Alumno_asociado }}\n\nGenera un saludo de bienvenida que sea único, cálido y altamente personalizado (por ejemplo, si es un Padre, saludarlo amablemente por su nombre y mencionar que estás listo para ayudarle con los trámites de su hijo/a).\n\nResponde estrictamente con un objeto JSON que tenga esta propiedad: bienvenidadinamica.\n\n⚠️ REGLA CRÍTICA DE FORMATO: No utilices bajo ninguna circunstancia asteriscos (**), guiones bajos (_) ni ningún tipo de formato Markdown en tu respuesta. Entrega el texto completamente limpio, usando comillas simples (' ') para resaltar los nombres de los botones. Lo que si puedes utilizar es darle un formato para que sea más fácil de leer, doy esta plantilla ¡Hola, Kirby5023! Es un verdadero placer saludarte de nuevo.\n\nSoy AetherIA, tu asistente virtual dedicada a acompañarte en cada paso de la gestión escolar. He notado que tu rol se encuentra actualmente como Pendiente, pero no hay de qué preocuparse, ya tengo todo listo para apoyarte con los trámites de Kirby5023. Mi objetivo es que te sientas con total tranquilidad y que cada proceso sea lo más fluido posible.\n\n¿En qué puedo asistirte hoy? Puedes comenzar seleccionando 'Registrar Ausencia' o revisar la información en 'Consultar Historial'. ¡Estoy aquí para lo que necesites!\n\nREGLA CRÍTICA: No reproduzca el mensaje de formato solo utilizalo como referencia para generar el prompt utiliza saltos de linea para que sea mas faccil de leer y utiliza emojis en donde quieras"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1440,
+        992
+      ],
+      "id": "1e12630e-06f8-4549-9709-359f69094747",
+      "name": "AetherIA usuario existente",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "M919rGNNkHDWilyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "reportar_falta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4bc4aaaa-8dd8-4ddd-980a-ad9975a85f6e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reportar falta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "328fb819-17cb-4a86-8588-3d29c7dd2fe8",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "consultar_tramite",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Consultar tramite"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2112,
+        1504
+      ],
+      "id": "0196e465-7bcd-44a9-99dd-961eae274a86",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2336,
+        1504
+      ],
+      "id": "1198fd7f-a3b2-4848-8c44-ee2a478b1b9e",
+      "name": "Trigger Botones Telegram",
+      "webhookId": "89e7daf4-6edc-41c8-965e-b62892328559",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Trigger Botones Telegram').item.json.callback_query.message.chat.id }}",
+        "text": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        1408
+      ],
+      "id": "e4a20ccf-445e-4c20-b1e8-0e1af6a5f96b",
+      "name": "Respuesta Reporte",
+      "webhookId": "de166f3d-4222-4272-aac7-e6dce36c0886",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres AetherIA, un asistente virtual empático para la gestión de ausencias escolares. El usuario ha seleccionado la opción de reportar una falta.\nRedacta un mensaje corto, empático y profesional indicándole al estudiante que debe llenar el formulario oficial de auditoría digital.\n\n\n⚠️ REGLA CRÍTICA DE URL: Debes incluir exactamente este enlace, letra por letra, sin quitarle ninguna línea ni guion bajo. Copia y pega textualmente esto:\nhttps://joguisam-gt.github.io/formularion8n?idtramite={{ $json.id_tramite }}\nREGLA DE FORMATO: No utilices asteriscos (**) ni guiones bajos (_) para decorar el texto (no uses negritas ni cursivas). Usa emojis con moderación y saltos de línea para facilitar la lectura."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1440,
+        1408
+      ],
+      "id": "606813e4-2a1a-455c-8b84-12a1f641faf3",
+      "name": "Mensaje Reporte",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "M919rGNNkHDWilyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres AetherIA, el sistema automatizado de gestión. El usuario ha consultado el estado de su trámite utilizando el código: {{ $json.id_tramite }}\nTras buscar en la base de datos de Google Sheets, se recuperaron con éxito los siguientes datos reales:\n•\tEstudiante: {{ $json.Nombre_usuario }}\n•\tFecha de Registro: {{ $json.Fecha_reporte }}\n•\tEstado del Trámite: {{ $json.clasificacion_ia }} (Nota importante: Si la columna 'Estado' viene vacía o dice 'Pendiente', indícale amablemente que su caso se encuentra actualmente en 'Revisión Manual' por el equipo de auditoría).\nRedacta un mensaje informativo, muy tecnológico y atento dándole el estatus de su caso. REGLA CRÍTICA DE FORMATO: No utilices asteriscos (**) ni guiones bajos (_) en ninguna parte de tu respuesta."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1888,
+        2048
+      ],
+      "id": "29ba37f3-b45c-4ee6-bc50-98797037775c",
+      "name": "Mensaje Consulta",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "M919rGNNkHDWilyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Fabricar el ID único con el año actual\nconst anioActual = new Date().getFullYear();\nconst numeroAleatorio = Math.floor(1000 + Math.random() * 9000); \nconst idGestionado = `AETHER-${anioActual}-TG${numeroAleatorio}`;\n\n// 2. Fabricar la fecha de hoy de forma automática\nconst hoy = new Date();\nconst fechaFormato = hoy.toLocaleDateString('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric'\n});\nconst horaFormato = hoy.toLocaleTimeString('es-GT', {\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\n// 3. Capturar lo que venía de Telegram de forma segura\nconst datosTelegram = $input.item?.json || {};\n\n// 4. Devolver TODO unido en un solo paquete estructurado\nreturn {\n  json: {\n    telegram_original: datosTelegram, // Guarda aquí todo lo de Telegram por seguridad\n    numero_gestion: idGestionado,     // Aquí nace tu número de caso\n    fecha_reporte: fechaFormato,       // Aquí nace la fecha de hoy\n    hora_reporte: horaFormato          // Aquí nace la hora de hoy\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1888,
+        1408
+      ],
+      "id": "69a050e6-507a-49dd-8e5b-16dd50422c4c",
+      "name": "Generador de gestion"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU",
+          "mode": "list",
+          "cachedResultName": "Aether IA Ausencia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1431428858,
+          "mode": "list",
+          "cachedResultName": "Historal de ausencias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit#gid=1431428858"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_reporte": "={{ $json.fecha_reporte }}",
+            "id_tramite": "={{ $json.numero_gestion }}",
+            "telegram_user_id": "={{ $json.telegram_original.callback_query.from.id }}",
+            "Nombre_usuario": "={{ $json.telegram_original.callback_query.from.username }}",
+            "Chat ID": "={{ $json.telegram_original.callback_query.message.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_tramite",
+              "displayName": "id_tramite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre_usuario",
+              "displayName": "Nombre_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telegram_user_id",
+              "displayName": "telegram_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_reporte",
+              "displayName": "Fecha_reporte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_ausencia_inicio",
+              "displayName": "fecha_ausencia_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "fecha_ausencia_final",
+              "displayName": "fecha_ausencia_final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Motivo_ausencia",
+              "displayName": "Motivo_ausencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Chat ID",
+              "displayName": "Chat ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clasificacion_ia",
+              "displayName": "clasificacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1664,
+        1408
+      ],
+      "id": "7539d356-8e24-49c7-844f-7667002b8319",
+      "name": "base de datos reporte",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "M2nVtuT1aBHFjtwh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU",
+          "mode": "list",
+          "cachedResultName": "Aether IA Ausencia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1431428858,
+          "mode": "list",
+          "cachedResultName": "Historal de ausencias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit#gid=1431428858"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tramite",
+              "lookupValue": "={{ $json.message.text }}"
+            },
+            {
+              "lookupColumn": "Nombre_usuario",
+              "lookupValue": "={{ $json.message.from.first_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2112,
+        2048
+      ],
+      "id": "3bb1b0dc-4af0-450f-b6e4-b147497a14fd",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "M2nVtuT1aBHFjtwh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2336,
+        2048
+      ],
+      "id": "b8cf8d62-71e3-4290-b635-3656d8b01096",
+      "name": "Lookup",
+      "webhookId": "36f0041c-9a3c-460d-a870-a1a7e53dacab",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Lookup').item.json.message.from.id }}",
+        "text": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1488,
+        2048
+      ],
+      "id": "6322079c-9754-4694-b114-1de6fb460e29",
+      "name": "Send a text message1",
+      "webhookId": "cd7ec81e-a5c7-4974-9410-67c80406bc85",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.callback_query.message.chat.id }}",
+        "text": "Por favor, escribe a continuación tu número de gestión (ejemplo: AETHER-2026-TG1234) para consultar el estado actual de tu trámite. 🔍",
+        "replyMarkup": "forceReply",
+        "forceReply": {},
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1888,
+        1600
+      ],
+      "id": "5e4d0606-f0db-4153-869e-b453698a0188",
+      "name": "Conexion Lookup",
+      "webhookId": "5de730d4-af5d-48de-a792-cb6c211901c9",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "recibir-justificantes",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2336,
+        1824
+      ],
+      "id": "c9a7d419-90e3-47ed-ae4a-a08f92c5ed71",
+      "name": "formulario AetherIA",
+      "webhookId": "b8b8ac63-06bd-4a16-a250-8cb382c92220"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU",
+          "mode": "list",
+          "cachedResultName": "Aether IA Ausencia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1431428858,
+          "mode": "list",
+          "cachedResultName": "Historal de ausencias",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bco3Tzz48kTx6fZlyHIfIdl-PfBdQXdm-RgOeYbsxcU/edit#gid=1431428858"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_tramite": "={{ $('formulario AetherIA').item.json.body.id_tramite }}",
+            "Nombre_usuario": "={{ $('formulario AetherIA').item.json.body.nombre_estudiante }}",
+            "Correo": "={{ $('formulario AetherIA').item.json.body.correo }}",
+            "Fecha_reporte": "={{ $('formulario AetherIA').item.json.body.fecha_registro }}",
+            "fecha_ausencia_inicio": "={{ $('formulario AetherIA').item.json.body.fecha_inicio }}",
+            "fecha_ausencia_final": "={{ $('formulario AetherIA').item.json.body.fecha_fin }}",
+            "Motivo_ausencia": "={{ $('formulario AetherIA').item.json.body.motivo }}",
+            "clasificacion_ia": "={{ $json.content.parts[0].text }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "Nombre_usuario"
+          ],
+          "schema": [
+            {
+              "id": "id_tramite",
+              "displayName": "id_tramite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre_usuario",
+              "displayName": "Nombre_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telegram_user_id",
+              "displayName": "telegram_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Fecha_reporte",
+              "displayName": "Fecha_reporte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_ausencia_inicio",
+              "displayName": "fecha_ausencia_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_ausencia_final",
+              "displayName": "fecha_ausencia_final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Motivo_ausencia",
+              "displayName": "Motivo_ausencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chat ID",
+              "displayName": "Chat ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "clasificacion_ia",
+              "displayName": "clasificacion_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1744,
+        1824
+      ],
+      "id": "3be03264-9e4a-4be4-87a0-00fce5ae6475",
+      "name": "Update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "M2nVtuT1aBHFjtwh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres un asistente de Inteligencia Artificial experto en auditoría escolar y análisis automatizado de documentos institucionales. Tu única tarea es analizar el texto extraído y la imagen/PDF de un justificante de inasistencia (médica, laboral o legal) y clasificarlo de forma estricta.\n\nCriterios de Evaluación Obligatorios:\n1. Validar elementos de autenticidad reales: Nombres de instituciones (hospitales, clínicas, empresas), firmas legibles, sellos oficiales, nombres y números de colegiado de doctores o firmas de responsables.\n2. Coherencia Temporal: El motivo y las fechas impresas en el justificante deben coincidir exactamente con el rango de fechas de la inasistencia reportada por el alumno.\n\nReglas Estrictas de Clasificación y Confianza (Escala 0-100):\n- \"Válida\": El documento es claramente auténtico, contiene firmas/sellos, es legible y justifica perfectamente el rango de la falta. (Umbral de confianza: 90 a 100).\n- \"Dudosa\": El documento presenta ambigüedades, carece de sellos claros, es parcialmente legible, o existe una ligera inconsistencia en las fechas que requiere de una inspección o validación manual por un docente. (Umbral de confianza: 60 a 89).\n- \"Inválida\": El documento es legible pero no justifica la falta, las fechas no coinciden en absoluto con el reporte, carece por completo de soportes mínimos, o es un documento erróneo/falso. (Umbral de confianza: 0 a 59).\n\n\nDebes analizar este documento: {{ $json.body.evidencia_nombre }}y entregarlo con el siguiente formato:\n\nNombre:{{ $json.body.nombre_estudiante }}\nConfianza: aqui coloca la nota sobre 100 de lo que has analizado del documento en cuestion\nCodigo: {{ $json.body.carnet }}\nCorreo: {{ $json.body.correo }}\nMotivo: {{ $json.body.motivo }}\nFecha de registro: {{ $json.body.fecha_registro }}\nComentarios: aqui debes colocar el razonamiento que tuviste con la clasificacion y confianza\n\nRecuerda analizar el archivo y utilizar la informacion que se usa exclusivamente en el archivo que debes utilizar, no inventes nada, \n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -2128,
+        1824
+      ],
+      "id": "e32f8f7f-45c9-4f83-a05d-e9000d2c2012",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "M919rGNNkHDWilyz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6769904314",
+        "text": "={{ $('Message a model').item.json.content.parts[0].text }}",
+        "replyMarkup": "=",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1536,
+        1824
+      ],
+      "id": "ee2fd900-ded1-45a9-a95d-e175bcbce251",
+      "name": "Send a text message",
+      "webhookId": "93d39471-c91f-4361-b49c-34b16ed50335",
+      "credentials": {
+        "telegramApi": {
+          "id": "puCzE7y2FvVXg8no",
+          "name": "Bot de pruebas"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Base de datos Alumnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base de datos Alumnos": {
+      "main": [
+        [
+          {
+            "node": "Registrado/No Registrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrado/No Registrado": {
+      "main": [
+        [
+          {
+            "node": "AetherIA usuario existente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generar ID Registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar ID Registro": {
+      "main": [
+        [
+          {
+            "node": "Registro del nuevo Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registro del nuevo Usuario": {
+      "main": [
+        [
+          {
+            "node": "AetherIA nuevo usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AetherIA nuevo usuario": {
+      "main": [
+        [
+          {
+            "node": "Bienvenida nuevo usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AetherIA usuario existente": {
+      "main": [
+        [
+          {
+            "node": "Saludo Usuario Existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Botones Telegram": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Generador de gestion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Conexion Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje Reporte": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Reporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje Consulta": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generador de gestion": {
+      "main": [
+        [
+          {
+            "node": "base de datos reporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base de datos reporte": {
+      "main": [
+        [
+          {
+            "node": "Mensaje Reporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Mensaje Consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formulario AetherIA": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "versionId": "5fea32b1-b1dc-49c7-914d-6038eaa2e7c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "065da65eedb687140f657b313974183357c1da3933459ffdf56ded1e49a92362"
+  },
+  "id": "iJl4BQmMljlbShkP",
+  "tags": []
+}
