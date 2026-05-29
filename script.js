@@ -1,5 +1,5 @@
 // URL proporcionada de ngrok conectada al nodo Webhook de n8n
-const WEBHOOK_URL = 'https://flashbulb-encrypt-hyphen.ngrok-free.dev/webhook-test/recibir-justificantes';
+const WEBHOOK_URL = 'https://joguisamgt.app.n8n.cloud/webhook-test/recibir-justificantes';
 
 // Elementos del DOM
 const absenceForm = document.getElementById('absence-form');
